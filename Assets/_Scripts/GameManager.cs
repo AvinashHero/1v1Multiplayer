@@ -1,7 +1,8 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance { get; private set; }
 
@@ -10,7 +11,17 @@ public class GameManager : MonoBehaviour
     {
         public int x;
         public int y;
+        public PlayerType playerType;
     }
+
+    public enum PlayerType
+    {
+        None,
+        Cross,
+        Circle,
+    }
+
+    private PlayerType localPlayerType;
 
     private void Awake()
     {
@@ -20,12 +31,29 @@ public class GameManager : MonoBehaviour
         }
         Instance = this;
     }
+
+    public override void OnNetworkSpawn()
+    {
+        if(NetworkManager.Singleton.LocalClientId == 0)
+        {
+            localPlayerType = PlayerType.Cross;
+        } else
+        {
+            localPlayerType = PlayerType.Circle;
+        }
+    }
     public void ClickedOnGridPosition(int x, int y)
     {
         Debug.Log("ClickedOnGridPoisition: " + x + ", " + y);
         OnClickedOnGridPosition?.Invoke(this, new OnClickdOnGridPositionEventArgs {
             x = x,
             y = y,
+            playerType = GetLocalPlayerType(),
         });
+    }
+
+    public PlayerType GetLocalPlayerType()
+    {
+        return localPlayerType;
     }
 }
